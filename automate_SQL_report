@@ -1,1 +1,75 @@
 
+# we are given a list of column name in an excel file, which we need to read and use to run sql queries on a given table
+
+df1 = pd.read_excel('/home/users/userid/documents/testfile.xlsx', sheet_name= 'Sheet1', inferschema='')
+column_name_list = df1['column_name'].tolist()
+
+# column_name_list will look like ['col1', 'col2', 'col3' ... ... ]
+
+query_list = []
+
+# we will parameterise the sql query and have a for loop run though the column_list to populate the query_list
+
+for column_name in column_name_list:
+    q = f"select {column_name}, count(*) as Count from {table_name) group by {column_name} order by {column_name] order by {column_name};"
+    query_list.append(q)
+
+# It will generate a list of sql queries such as following
+# [ 'select col1, count(*) as count from table group by col1 order by col1;',
+#  'select col2, count(*) as count from table group by col2 order by col2;',
+#  ... ... ...
+#  ... ... ...
+#  'select col10, count(*) as count from table group by col10 order by col10;' ]
+
+
+# following for loop will again run through the list of queries and generate pandas dataframes such as pandasDF_1, pandasDF_2 etc.
+
+for i,j in enumerate((query_list)):
+    globals()[f"sparkdf{i}"] = spark.read.format("net.snowflake.spark.snowflake").options(**sfoptions).option("query", j).load()
+    globals()[f"pandasDF_{i}"] = globals()[f"sparkdf{i}"].toPandas()
+    globals()[f"pandasDF_{i}"] = globals()[f"pandasDF_{i}"].fillna('NULL')
+
+
+# we will further modify the dataframes, but instead of doing 1 by 1 , we will do it all at once
+
+for i,j in enumerate((query_list)):
+    globals()[f"pandasDF_{i}"]['Percent%'] = (((pd.to_numeric(globals()[f"pandasDF_{i}"]['Count'])/pd.to_numeric(globals()[f"pandasDF_{i}"]['Count'].sum())*100).round(4).astype(str) + '%'
+
+
+
+
+# advanced , read dataframe from excel file . picking up first 5 columns from the excel file 
+
+for i, j in enumerate((column_name_list)):
+    tab = j
+    globals()[f"df_a_{i}"] = pd.read_excel('/home/users/userid/input_file.xlsx', sheet_name= tab, inferSchema = '')
+    globals()[f"df_a_{i}"] = globals()[f"df_a{i}].iloc[: , :5]
+
+
+
+# merge the sql data with the excel data to show matching or non matching values 
+
+for i, j in enumerate((column_name_list)):
+    key = j
+    globals()[f"df_b_{i}"] = pd.merge(globals()[f"df_a_{i}"] , globals()[f"pandasDF_{i}"], how ='outer', indicator = True, left_on = 'key_col_in_excel', right_on = key)
+    globals()[f"df_nonmatch_{i}"] = globals()[f"df_b_{i}"][globals()[f"df_b_{i}"]._merge != 'both')]
+
+
+# create excel file 
+workbook = xlsxwriter.Workbook('testing.xlsx')
+worksheet = workbook.add_worksheet()
+workbook.close()
+
+
+# for each of the dataframe we will write each of them in a separate tab and name the tab according to the column name 
+
+    
+With pd.ExcelWriter('testing.xlsx', engine='xlsxwriter') as writer:
+    for i,j in enumerate((column_name_list)):
+        tab = j 
+        globals()[f"pandasDF_{i}"].to_excel(writer, sheet_name = tab, index = False)
+
+
+#
+#
+#
