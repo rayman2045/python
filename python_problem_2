@@ -1,0 +1,28 @@
+#new_name is created by removing all the vowels from 'name'. I want to compare first 3 characters of 'value' and first 3 character of 'each of the 
+#word' in 'new_name' and if they match I want to return the value from the name column. For example 'Dln' in value exists in 'Dlnqncy' of new_name, 
+#so we will return 'Delinquency' from name. The logic should work like
+
+'if value[:3] in new_name[:3] then return name'
+
+
+
+sample = ({'name':['Delinquency Rate','Cumulative Probability'],
+           'value':['Dlnqy','Prbblty'],
+           'new_name':['Dlnqncy Rt','Cmltv Prbblty']})
+
+test = pd.DataFrame(sample)
+
+
+#solution 1:
+
+def get_matches(name, value, new_name, default=''):
+    return next( (word for word in new_name.split() if str(value)[:3] in word[:3]),default)
+
+
+test['match'] = test[['name', 'value', 'new_name']].apply(lambda row: get_matches(*row, default=' '), axis=1)
+
+#Solution 2:
+
+(test
+ .assign(match=lambda x: np.where((x.new_name.str[:3] == x.value.str[:3]), x.name, x.value))
+)
