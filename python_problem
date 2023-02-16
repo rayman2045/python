@@ -1,0 +1,33 @@
+--We are trying to look for a keyword in a sentence and return the whole word. For example my keyword is 'str' and if there's match for 'str' 
+--in all_text, I want to return 'string' .
+
+
+all_text = 'some rather long string'
+keyword_list = ['str', 'rat', 'me', 'ng']
+
+
+for item in keyword_list:
+      if item in all_text:
+            print(item)
+
+str
+rat
+me
+ng
+
+--Now if we want to return string, rather, some, long instead of str, rat, me , ng - we have two ways 
+
+--Solution 1:
+
+all_text = 'some rather long string'
+keyword_list = ['str', 'rat', 'me', 'ng']
+
+words = [word for word in all_text.split() if any(key in word for key in keyword_list)]
+
+
+--Solution 2:
+
+import re
+
+regex = re.compile(fr'\b\w*(?:{"|".join(keyword_list)})\w*\b')
+words = re.findall(regex, all_text)
