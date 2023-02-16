@@ -1,0 +1,65 @@
+#Problem: I am trying to loop through a dataframe, row by row, by using a for loop. But its not working as desired. I know there are iterrows() and 
+#itertuple() by I want to experiment with for loop.
+
+#Goal: check column 'two' by each row, and if a value of column 'two' exists in column 'one' then create a new column 'new_col' with the value 'del'. 
+#If the value doesnt exist in column 'one' then create the 'new_col' as 'keep'. For example , if column 'two' has 101, i want to compare it with all 
+#the values of column 'one'
+
+
+data3 = {"one":['101', '102', '103' , '104'],
+     "two":['101', '105', '106', '104'],
+     "three": ['102', '5', '107', '108'],
+     "other": ['101', '102', '103' , '104']
+     }
+df3 = pd.DataFrame(data3)
+
+
+#Solution 1:
+
+dfToList1 = df3['two'].tolist()
+for x in dfToList1:
+   if x in df3['one'].values:
+       df3['new_col'] = 'del'
+   else:
+       df3['new_col'] = 'keep'
+
+
+#then I can replace the value in 'two' which matches with 'one' with a string like 'none'
+
+
+df3.loc[df3['new_col'] == 'del', 'two'] = 'none'
+
+Solution 2:
+
+#Use np.where with Series.eq and Series.isin to check.
+
+df3['newcol']=np.where(~df3.two.isin(df3.one),'keep','del')
+
+
+#or to select by columns 'one' with any common value with column two:
+
+df3['newcol']=np.where(~df3.one.isin(df3.loc[df3.two.eq(df3.one),'two']),'keep','del')
+print(df3)
+
+#explanation
+
+two_coincident_one=df3.loc[df3.two.eq(df3.one),'two']
+print(two_coincident_one)
+0    101
+3    104
+Name: two, dtype: object
+
+
+~df3.one.isin(two_coincident_one)
+
+0    False
+1     True
+2     True
+3    False
+Name: one, dtype: bool
+
+
+
+#Simply with Series.eq, those matching rows are selected between both columns. With DataFrame.loc, the rows of column 'two' are selected that 
+#coincide with column 1. Then with Series.isin, the values ​​of column one selected in the previous ones are selected (see detail)
+#While with the above method you mentioned only the rows of column 2 whose values ​​are present in column 1 were selected
